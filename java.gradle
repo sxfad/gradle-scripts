@@ -1,0 +1,31 @@
+apply plugin: 'java'
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.encoding = 'UTF-8'
+            options.addStringOption('Xdoclint:none', '-quiet') // 关闭JDK1.8的doclint特性
+        }
+    }
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+// 打包源代码，为了方便查看源码及调试，把源码也上传到nexus仓库中
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+// 打javadoc包，为了方便查看注释，需要把javadoc也上传到nexus仓库中
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+artifacts {
+  archives jar
+  archives sourcesJar
+  archives javadocJar
+}

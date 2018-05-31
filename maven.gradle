@@ -1,0 +1,52 @@
+
+/**
+*  maven相关配置；
+*  为达到更好的缓存效果，将请求公网仓库的请求删除, 转用私有仓库
+*  作者：jiayu.qiu
+*  使用方法：在根项目的build.gradle中增加如下代码，进行导入：
+*  ext{
+*    sxGradleHome = "https://raw.githubusercontent.com/sxfad/gradle-scripts/master/"
+*  }
+*  apply from: sxGradleHome + 'maven.gradle'
+*  
+*  更多内容，请参考 https://github.com/sxfad/gradle-scripts
+**/
+
+apply plugin: 'maven'
+ext {
+  REPOSITORY_HOME = 'http://maven.aliyun.com'
+  REPOSITORY_URL =  REPOSITORY_HOME + "/nexus/content/groups/public"
+}
+allprojects {
+
+    repositories {// 使用 mavenCentral()时，将远程的仓库替换为自己搭建的仓库
+        all {ArtifactRepository repo ->
+            // println repo.url.toString()
+            def url = repo.url.toString()
+            if (repo instanceof MavenArtifactRepository && (url.startsWith("https://repo1.maven.org/maven2") || url.startsWith('https://jcenter.bintray.com/'))) { 
+                project.logger.warn "Repository ${repo.url} removed."
+                remove repo
+            } else {
+               println "maven url:" + url
+            }
+        }
+        maven { 
+            url REPOSITORY_URL 
+        }
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                snapshotRepository(url: REPOSITORY_HOME + "/nexus/content/repositories/snapshots/") {
+                    authentication(userName: 'xxx', password: 'xxx')
+                }
+                repository(url: REPOSITORY_HOME + "/nexus/content/repositories/releases/") {
+                    authentication(userName: 'xxx', password: 'xxx')
+                }
+            }
+        }
+    }
+}
+
+

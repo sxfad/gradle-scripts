@@ -1,0 +1,17 @@
+
+/**
+*
+*  使用Spring Cloud时，build.gradle中需要使用参数，抽取到此文件中（目录是为了统一Spring cloud 与 Spring boot版本）；
+*  作者：jiayu.qiu
+*  使用方法：在根项目的build.gradle中增加如下代码，进行导入：
+*  ext{
+*    sxGradleHome = "https://raw.githubusercontent.com/sxfad/gradle-scripts/master/"
+*  }
+*  apply from: sxGradleHome + 'spring-cloud-camden-sr7.gradle'
+*  
+*  更多内容，请参考 https://github.com/sxfad/gradle-scripts
+**/
+ext {
+  springCloudVersion = 'Camden.SR7'
+  springBootVersion = '1.4.2.RELEASE'
+}

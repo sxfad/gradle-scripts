@@ -1,0 +1,41 @@
+/**
+常用命令：
+1. tasks 列出项目可运行的task
+2. assemble - 打包输出项目.
+3. bootRepackage - 打可以通过'java -jar' 命令执行的JAR或WAR包
+4. build - 测试并打包输出.
+5. clean - 删除build目录.
+6. jar - 打jar包.
+7. javadoc - 打javadoc包.
+8. dependencies - 显示项目的所有依赖关系.
+9. uploadArchives - 上传':archives'中配置的所有包到maven 仓库
+*/
+buildscript { // buildscript 不能抽取出来，只能重复写。
+  ext{
+    sxGradleHome = "https://raw.githubusercontent.com/sxfad/gradle-scripts/master/"
+  }
+  apply from: sxGradleHome + 'maven.gradle'
+  apply from: sxGradleHome + 'spring-cloud-edgware.gradle' // 导入使用Spring Cloud及相应的Spring Boot版本号
+  repositories {
+    maven { url REPOSITORY_URL }
+  }
+  dependencies {
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+  }
+}
+subprojects {
+    // 参考 https://github.com/sxfad/gradle-scripts
+    apply from: sxGradleHome + 'maven.gradle'
+    apply from: sxGradleHome + 'spring-cloud.gradle'
+
+    version = '0.0.1' // 设置版本
+    group = 'com.suixingpay.demo' // 设置group id
+    description = 'demo' // 设置描述
+
+    dependencies {
+        compileOnly('org.springframework.boot:spring-boot-configuration-processor')
+        compileOnly('org.projectlombok:lombok')
+        testCompile('org.projectlombok:lombok')
+        testCompile "org.springframework.boot:spring-boot-starter-test"
+    }
+}
