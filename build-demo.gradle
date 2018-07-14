@@ -1,0 +1,91 @@
+buildscript {
+    ext {
+        springCloudVersion = 'Edgware.SR3'
+        springBootVersion = '1.5.9.RELEASE'
+        REPOSITORY_HOME = "http://maven.aliyun.com"
+    }
+    repositories {
+        maven { url "${REPOSITORY_HOME}/nexus/content/groups/public" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.encoding = 'UTF-8'
+            options.addStringOption('Xdoclint:none', '-quiet') // 关闭JDK1.8的doclint特性
+        }
+    }
+}
+// 导入Spring Cloud 依赖
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+  }
+}
+
+dependencyManagement {
+  resolutionStrategy {
+    // 检查远程依赖是否存在更新
+    cacheChangingModulesFor 0, 'seconds'
+    cacheChangingModulesFor 0, 'seconds' // 修改本地缓存策略
+  }
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+bootRepackage {
+  // 默认只打普通jar包
+  enabled = false
+}
+
+// 打包源代码，为了方便查看源码及调试，把源码也上传到nexus仓库中
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+// 打javadoc包，为了方便查看注释，需要把javadoc也上传到nexus仓库中
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+artifacts {
+  archives jar
+  archives sourcesJar
+  archives javadocJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            snapshotRepository(url: "${REPOSITORY_HOME}/nexus/content/repositories/snapshots/") {
+                authentication(userName: 'xxx', password: 'xxx')
+            }
+            repository(url: "${REPOSITORY_HOME}/nexus/content/repositories/releases/") {
+                authentication(userName: 'xxx', password: 'xxx')
+            }
+        }
+    }
+}
+
+version = '0.0.1' // 设置版本
+group = 'com.suixingpay.demo' // 设置group id
+description = 'demo' // 设置描述
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compileOnly('org.springframework.boot:spring-boot-configuration-processor')
+    compileOnly('org.projectlombok:lombok')
+    testCompile('org.projectlombok:lombok')
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+}
