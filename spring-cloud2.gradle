@@ -1,0 +1,78 @@
+/**
+*
+*  使用Spring Cloud时，build.gradle中需要重复编写的内容，抽取到此文件中；
+*  作者：jiayu.qiu
+*  使用方法：在根项目的build.gradle中增加如下代码，进行导入：
+*  ext{
+*    sxGradleHome = "https://raw.githubusercontent.com/sxfad/gradle-scripts/master/"
+*  }
+*  apply from: sxGradleHome + 'spring-cloud.gradle'
+*  
+*  更多内容，请参考 https://github.com/sxfad/gradle-scripts
+**/
+// 重要：java plugin 说明：https://docs.gradle.org/current/userguide/java_plugin.html
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'idea'
+
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.encoding = 'UTF-8'
+            options.addStringOption('Xdoclint:none', '-quiet') // 关闭JDK1.8的doclint特性
+        }
+    }
+}
+// 导入Spring Cloud 依赖
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+  }
+}
+
+dependencyManagement {
+  resolutionStrategy {
+    // 检查远程依赖是否存在更新
+    cacheChangingModulesFor 0, 'seconds'
+    cacheChangingModulesFor 0, 'seconds' // 修改本地缓存策略
+  }
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+bootJar {
+  // 默认只打普通jar包
+  enabled = false
+}
+//默认情况下，当`bootJar`或`bootWar`任务配置时，`jar`或者`war` 任务被禁用。通过启用`jar`或`war`任务，可以将项目配置为同时构建可执行jar或者war
+jar {
+	enabled = true
+}
+
+// 打包源代码，为了方便查看源码及调试，把源码也上传到nexus仓库中
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+// 打javadoc包，为了方便查看注释，需要把javadoc也上传到nexus仓库中
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+artifacts {
+  archives jar
+  archives sourcesJar
+  archives javadocJar
+}
+
+idea {
+  module {
+   downloadJavadoc = true
+   downloadSources = true
+  }
+}
